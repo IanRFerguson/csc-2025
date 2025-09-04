@@ -1,0 +1,4 @@
+sources:
+  - name: csc_main
+    tables:
+      - name: nba_player_data

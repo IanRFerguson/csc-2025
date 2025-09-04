@@ -1,0 +1,13 @@
+csc_dbt:
+  target: dev
+  outputs:
+    dev:
+      type: bigquery
+      method: service-account
+      project: tmc-changemakers-2025
+      dataset: csc_dbt
+      threads: 1
+      timeout_seconds: 300
+      location: US
+      priority: interactive
+      keyfile: ../service_accounts/use-me.json

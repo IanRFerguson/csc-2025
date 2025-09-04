@@ -1,0 +1,24 @@
+name: 'csc_dbt'
+version: '1.0.0'
+
+# This setting configures which "profile" dbt uses for this project.
+profile: 'csc_dbt'
+
+# These configurations specify where dbt should look for different types of files.
+# The `model-paths` config, for example, states that models in this project can be
+# found in the "models/" directory. You probably won't need to change these!
+model-paths: ["models"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+
+# NOTE - This will be removed when `dbt clean`
+clean-targets:         
+  - "target"
+  - "dbt_packages"
+
+models:
+  csc_dbt:
+    +materialized: table
+    00-base:
+      +schema: base
+      +materialized: view

@@ -6,6 +6,8 @@ infra/out
 infra/.terraform*
 infra/terraform.tfstate*
 
+logs/
+
 # Odds and ends
 **.DS_Store
 **.pyc

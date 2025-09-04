@@ -35,7 +35,7 @@ def get_data_from_nba_reference(year: int, team_initials: str) -> pd.DataFrame:
         # Add ELT metadata
         scoring_table["year"] = year
         scoring_table["team_initials"] = team_initials
-        scoring_table["etl_load_date"] = pd.Timestamp(datetime.now())
+        scoring_table["_load_timestamp"] = pd.Timestamp(datetime.now())
 
     except Exception as e:
         print(f"Error occurred: {e}")
