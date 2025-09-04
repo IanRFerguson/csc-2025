@@ -22,3 +22,5 @@ models:
     00-base:
       +schema: base
       +materialized: view
+    01-staging:
+      +schema: staging

@@ -1,0 +1,7 @@
+models:
+  - name: stg_nba__player_data
+    tests:
+      - unique:
+          column_name: player_id
+      - not_null:
+          column_name: player_id
