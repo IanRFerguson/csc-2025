@@ -1,0 +1,11 @@
+# Credentials
+service_accounts/
+
+# Keep the state out of version control
+infra/out
+infra/.terraform*
+infra/terraform.tfstate*
+
+# Odds and ends
+**.DS_Store
+**.pyc
