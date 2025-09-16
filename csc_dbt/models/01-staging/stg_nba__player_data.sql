@@ -40,7 +40,7 @@ WITH
             Awards AS awards,
             year AS season_year,
             team_initials AS team_initials,
-            etl_load_date,
+            _load_timestamp,
             _transform_timestamp
 
         FROM {{ ref('base_nba__player_data') }}

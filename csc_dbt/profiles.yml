@@ -12,6 +12,12 @@ csc_dbt:
       priority: interactive
       keyfile: ../service_accounts/tmc-changemakers-2025-a5d74b23cad8.json
 
+      # See the docs here - https://docs.getdbt.com/docs/core/connect-data-platform/bigquery-setup#running-python-models-on-dataproc
       gcs_bucket: csc-scratch
       dataproc_region: us-central1
       submission_method: serverless
+      dataproc_batch:
+        environment_config:
+          execution_config:
+            service_account: csc-dev@tmc-changemakers-2025.iam.gserviceaccount.com
+        

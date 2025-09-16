@@ -16,15 +16,15 @@ MODEL_FEATURES = [
 # NOTE - dbt and session are required parameters for dbt models
 def model(dbt, session):
     # Load the data
-    df = dbt.ref("stg_nba__player_data").to_pandas()
+    df = dbt.ref("stg_nba__player_data").toPandas()
 
     # Select features and target variable
     features = df[MODEL_FEATURES]
     target = df["points"]
 
     # Split the data into training and testing sets
-    X_train, X_test, y_train, y_test = train_test_split(
-        features, target, test_size=0.2, random_state=42
+    X_train, _, y_train, _ = train_test_split(
+        features, target, train_size=0.5, random_state=101
     )
 
     # Create and train the model
