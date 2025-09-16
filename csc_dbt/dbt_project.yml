@@ -24,3 +24,5 @@ models:
       +materialized: view
     01-staging:
       +schema: staging
+    02-analytics:
+      +schema: analytics

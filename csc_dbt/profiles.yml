@@ -10,4 +10,8 @@ csc_dbt:
       timeout_seconds: 300
       location: US
       priority: interactive
-      keyfile: ../service_accounts/use-me.json
+      keyfile: ../service_accounts/tmc-changemakers-2025-a5d74b23cad8.json
+
+      gcs_bucket: csc-scratch
+      dataproc_region: us-central1
+      submission_method: serverless
