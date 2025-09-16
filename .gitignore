@@ -6,6 +6,7 @@ infra/out
 infra/.terraform*
 infra/terraform.tfstate*
 
+.venv/
 logs/
 
 # Odds and ends
