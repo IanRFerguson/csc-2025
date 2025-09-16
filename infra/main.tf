@@ -59,9 +59,24 @@ resource "google_project_iam_member" "csc_service_account_roles" {
     "roles/bigquery.dataEditor",
     "roles/bigquery.jobUser",
     "roles/storage.admin",
+    "roles/dataproc.editor",
+    "roles/dataproc.worker"
   ])
   project = "tmc-changemakers-2025"
   role    = each.value
   member  = "serviceAccount:${google_service_account.csc_service_account.email}"
 }
 
+resource "google_project_iam_member" "csc_service_account_impersonate" {
+  for_each = toset(["ian.f@movementcooperative.org", "ianfergusonrva@gmail.com"])
+  
+  project = "tmc-changemakers-2025"
+  role    = "roles/iam.serviceAccountUser"
+  member  = "user:${each.value}"
+}
+
+resource "google_project_iam_member" "csc_service_account_impersonate_itself" {
+  project = "tmc-changemakers-2025"
+  role    = "roles/iam.serviceAccountUser"
+  member  = "serviceAccount:${google_service_account.csc_service_account.email}"
+}
