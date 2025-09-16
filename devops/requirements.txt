@@ -1,0 +1,7 @@
+dbt-bigquery==1.10.2
+redis
+rq
+google-cloud-storage
+google-cloud-bigquery
+sqlalchemy
+pandas

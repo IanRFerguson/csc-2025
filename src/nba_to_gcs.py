@@ -1,14 +1,18 @@
-from datetime import datetime
-import pandas as pd
-from sqlalchemy import func
-from google.cloud import storage
 import os
 import tempfile
+from datetime import datetime
+
+import pandas as pd
+from google.cloud import storage
+from redis import Redis
+from rq import Queue
+from sqlalchemy import func
 
 #####
 
 TEAM_INITIALS = ["MIL", "ATL", "NYK"]
 YEARS = range(2020, 2026)
+QUEUE = Queue("nba_to_gcs", connection=Redis())
 
 
 def get_data_from_nba_reference(year: int, team_initials: str) -> pd.DataFrame:
@@ -71,27 +75,34 @@ def write_table_to_gcs(
     print(f"File uploaded to {destination_blob_name} in bucket {bucket_name}.")
 
 
-def run(storage_client: storage.Client) -> None:
+def process_single_team(team: str, storage_client: storage.Client) -> None:
+    """
+    Writes one CSV per year to Google Cloud Storage for the given team
+    """
+
     for year in YEARS:
-        for team in TEAM_INITIALS:
-            df = get_data_from_nba_reference(year, team)
-            if not df.empty:
-                write_table_to_gcs(
-                    df=df,
-                    bucket_name="csc-scratch",
-                    destination_blob_name=f"nba_data/{team}/{year}.csv",
-                    storage_client=storage_client,
-                )
+        df = get_data_from_nba_reference(year, team)
+        if not df.empty:
+            write_table_to_gcs(
+                df=df,
+                bucket_name="csc-scratch",
+                destination_blob_name=f"nba_data/{team}/{year}.csv",
+                storage_client=storage_client,
+            )
+
+
+def run(storage_client: storage.Client) -> None:
+    """
+    Imports team data for all 30 teams in parallel
+    """
+
+    for team in TEAM_INITIALS:
+        _ = QUEUE.enqueue(process_single_team, team=team, storage_client=storage_client)
 
 
 #####
 
 if __name__ == "__main__":
-    # Set the JSON file path for the service account key
-    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.path.join(
-        os.path.dirname(__file__), "../service_accounts/use-me.json"
-    )
-
     # Instantiate the Google Cloud Storage client
     storage_client = storage.Client()
 

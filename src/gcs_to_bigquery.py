@@ -1,7 +1,15 @@
-from google.cloud import storage, bigquery
 import os
 
+import backoff
+from google.cloud import bigquery, storage
+from google.cloud.exceptions import NotFound
+from redis import Redis
+from rq import Connection, Queue, Worker
+from typing import List
+
 #####
+
+QUEUE = Queue("gcs_to_bigquery", connection=Redis())
 
 
 def load_gcs_to_bigquery(
@@ -48,6 +56,34 @@ def load_gcs_to_bigquery(
     )
 
 
+def filter_flat_files(
+    bigquery_client: bigquery.Client,
+    all_flat_files: List[str],
+    log_table_name: str = "csc_main.log",
+) -> List[str]:
+    """
+    Compare all files in the GCS bucket with the files we've already
+    loaded to BigQuery
+
+    Args:
+        bigquery_client (bigquery.Client): An instance of the BigQuery client.
+        all_flat_files (List[str]): A list of all files in the GCS bucket.
+        log_table_name (str): The name of the BigQuery table that logs loaded files.
+
+    Returns:
+        List[str]: A list of files that have not yet been loaded to BigQuery.
+    """
+
+    try:
+        query = f"SELECT * FROM `{log_table_name}`"
+        table_values = bigquery_client.query(query)
+        loaded_files = [row["blob_name"] for row in table_values]
+    except NotFound:
+        loaded_files = []
+
+    return [file for file in all_flat_files if file not in loaded_files]
+
+
 def run(
     bigquery_client: bigquery.Client,
     storage_client: storage.Client,
@@ -60,11 +96,15 @@ def run(
         file.name for file in storage_client.list_blobs(bucket_or_name=bucket_name)
     ]
 
-    # Loop through each file and load it into BigQuery
+    filtered_flat_files = filter_flat_files(
+        bigquery_client=bigquery_client, all_flat_files=all_flat_files
+    )
+
+    # Queue up a GCS-to-BigQuery load per new file
     # NOTE - We could also batch these into a larger load job!
-    for flat_file in all_flat_files:
-        print(f"Processing file {flat_file}...")
-        load_gcs_to_bigquery(
+    for flat_file in filtered_flat_files:
+        _ = QUEUE.enqueue(
+            load_gcs_to_bigquery,
             bucket_name=bucket_name,
             source_blob_name=flat_file,
             destination_table_name=destination_table_name,
@@ -75,11 +115,6 @@ def run(
 #####
 
 if __name__ == "__main__":
-    # Set the JSON file path for the service account key
-    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.path.join(
-        os.path.dirname(__file__), "../service_accounts/use-me.json"
-    )
-
     # Instantiate the Google Cloud Storage client
     storage_client = storage.Client()
     bigquery_client = bigquery.Client()
