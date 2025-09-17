@@ -6,13 +6,12 @@ from sqlalchemy import func
 from utilities.logger import logger as eng_logger
 
 
-def setup_full_refresh(
+def handle_full_refresh(
     bigquery_client: bigquery.Client,
     destination_table_name: str,
 ) -> None:
     """
-    Placeholder function for any setup needed for a full refresh.
-    Currently, no specific setup is required.
+    Drops the destination table in the case of a full refresh.
     """
 
     # Delete the existing table data
@@ -21,7 +20,7 @@ def setup_full_refresh(
 
     bigquery_client.delete_table(table_ref, not_found_ok=True)
 
-    eng_logger.warning(f"Deleted table {destination_table_name}.")
+    eng_logger.info(f"Deleted table {destination_table_name}.")
 
 
 def randomly_fail():
@@ -47,6 +46,8 @@ def setup_log_table(
     ]
     table = bigquery.Table(table_ref, schema=schema)
 
+    # If we're running a full refresh, we'll drop the log table first
+    # but will always create it if it doesn't exist in the next step
     if full_refresh:
         eng_logger.warning("Full refresh requested - resetting log table")
         bigquery_client.delete_table(table_ref, not_found_ok=True)
@@ -82,11 +83,13 @@ def filter_flat_files(
         f"Filtering {len(incoming_flat_files)} incoming flat files against log table..."
     )
 
+    # Query the log table and get a list of files already present in BigQuery
     log_table_values = bigquery_client.query(
         f"SELECT blob_name FROM `{dataset}.{log_table}`"
     ).result()
     existing_files = [row["blob_name"] for row in log_table_values]
 
+    # Filter the incoming files to only include those not already in BigQuery
     filtered_files = [
         file for file in incoming_flat_files if file not in existing_files
     ]

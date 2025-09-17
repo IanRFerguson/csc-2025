@@ -4,12 +4,19 @@ from datetime import datetime
 
 import backoff
 from google.cloud import bigquery, storage
+from google.cloud.exceptions import NotFound
 
+from constants import (
+    BUCKET_NAME,
+    DESTINATION_DATASET_NAME,
+    DESTINATION_TABLE_NAME,
+    PREFIX,
+)
 from utilities.logger import logger as eng_logger
 from utilities.pipeline_helpers import (
     filter_flat_files,
+    handle_full_refresh,
     randomly_fail,
-    setup_full_refresh,
     setup_log_table,
 )
 
@@ -18,7 +25,7 @@ from utilities.pipeline_helpers import (
 
 @backoff.on_exception(
     backoff.constant,
-    RuntimeError,
+    [RuntimeError, NotFound],
     interval=1,
     max_tries=5,
     logger=eng_logger,
@@ -56,7 +63,7 @@ def load_gcs_to_bigquery(
     job_config = bigquery.LoadJobConfig(
         source_format=bigquery.SourceFormat.CSV,
         skip_leading_rows=1,  # Skip header row if present
-        autodetect=autodetect,  # Let BigQuery auto-detect the schema
+        autodetect=autodetect,  # Let BigQuery autodetect the schema
     )
 
     # Load data from GCS to BigQuery
@@ -65,19 +72,29 @@ def load_gcs_to_bigquery(
         destination=table_ref,
         job_config=job_config,
     )
-    load_job.result()  # Wait for the job to complete
 
+    # Wait for the job to complete
+    load_job.result()
+
+    # Log the GCS URI after it has been written to BigQuery
+    # This will prevent duplicates from getting into the table
     if load_job.state == "DONE" and load_job.error_result is None:
         table_ref = bigquery_client.dataset(dataset_name).table("log")
-        bigquery_client.insert_rows_json(
-            table=table_ref,
-            json_rows=[
-                {
-                    "blob_name": source_blob_name,
-                    "uploaded_at": datetime.now().isoformat(),
-                }
-            ],
-        )
+        eng_logger.debug(f"Logging {source_blob_name} to {table_ref.path}")
+
+        try:
+            bigquery_client.insert_rows_json(
+                table=table_ref,
+                json_rows=[
+                    {
+                        "blob_name": source_blob_name,
+                        "uploaded_at": datetime.now().isoformat(),
+                    }
+                ],
+            )
+        except NotFound as e:
+            eng_logger.error(f"Error logging to BigQuery: {e}")
+            raise
 
     eng_logger.info(
         f"Job finished. Loaded {load_job.output_rows} rows into {dataset_name}.{table_name}"
@@ -93,7 +110,11 @@ def run(
     full_refresh: bool = False,
 ) -> None:
 
+    # This separates main.table into main, table
     dataset, table = destination_table_name.split(".")
+
+    # Ensure that the log table exists before we get going
+    # NOTE - In a full refresh we'll drop and recreate the log table
     setup_log_table(
         bigquery_client=bigquery_client, dataset_name=dataset, full_refresh=full_refresh
     )
@@ -103,18 +124,26 @@ def run(
         file.name
         for file in storage_client.list_blobs(bucket_or_name=bucket_name, prefix=prefix)
     ]
+
+    # Compare all the files in the bucket with the files
+    # we've already written to the log
     filtered_flat_files = filter_flat_files(
         bigquery_client=bigquery_client,
         dataset=dataset,
         incoming_flat_files=all_flat_files,
     )
 
+    # If full refresh, drop the destination table
     if full_refresh:
-        eng_logger.warning("Full refresh requested")
-        setup_full_refresh(
+        handle_full_refresh(
             bigquery_client=bigquery_client,
             destination_table_name=destination_table_name,
         )
+
+    # If no new files, exit early
+    if not filtered_flat_files:
+        eng_logger.info("No new files to process")
+        return
 
     # Loop through each file and load it into BigQuery
     # NOTE - We could also batch these into a larger load job!
@@ -138,10 +167,6 @@ if __name__ == "__main__":
     STORAGE_CLIENT = storage.Client()
     BIGQUERY_CLIENT = bigquery.Client()
 
-    BUCKET_NAME = "csc-scratch"
-    PREFIX = "nba_data/"
-    DESTINATION_TABLE_NAME = "csc_main.nba_player_data"
-
     FULL_REFRESH = os.environ.get("FULL_REFRESH", "false").lower() == "true"
 
     # Load all the NBA player data into GCS
@@ -150,6 +175,6 @@ if __name__ == "__main__":
         bigquery_client=BIGQUERY_CLIENT,
         bucket_name=BUCKET_NAME,
         prefix=PREFIX,
-        destination_table_name=DESTINATION_TABLE_NAME,
+        destination_table_name=f"{DESTINATION_DATASET_NAME}.{DESTINATION_TABLE_NAME}",
         full_refresh=FULL_REFRESH,
     )

@@ -6,12 +6,10 @@ import pandas as pd
 from google.cloud import storage
 from sqlalchemy import func
 
+from constants import BASE_URL, BUCKET_NAME, PREFIX, TEAM_INITIALS, YEARS
 from utilities.logger import logger as eng_logger
 
 #####
-
-TEAM_INITIALS = ["MIL", "ATL", "NYK"]
-YEARS = range(2020, 2026)
 
 
 def get_data_from_nba_reference(year: int, team_initials: str) -> pd.DataFrame:
@@ -26,11 +24,7 @@ def get_data_from_nba_reference(year: int, team_initials: str) -> pd.DataFrame:
         pd.DataFrame: A DataFrame containing the player statistics.
     """
 
-    url = (
-        "https://www.basketball-reference.com/teams/{team_initials}/{year}.html".format(
-            team_initials=team_initials, year=year
-        )
-    )
+    url = BASE_URL.format(team_initials=team_initials, year=year)
 
     try:
         scoring_table = pd.read_html(url)[1]
@@ -84,8 +78,8 @@ def run(storage_client: storage.Client) -> None:
             if not df.empty:
                 write_table_to_gcs(
                     df=df,
-                    bucket_name="csc-scratch",
-                    destination_blob_name=f"nba_data/{team}/{year}.csv",
+                    bucket_name=BUCKET_NAME,
+                    destination_blob_name=f"{PREFIX}{team}/{year}.csv",
                     storage_client=storage_client,
                 )
 
