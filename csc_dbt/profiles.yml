@@ -7,7 +7,7 @@ csc_dbt:
       project: tmc-changemakers-2025
       dataset: csc_dbt
       threads: 1
-      timeout_seconds: 300
+      timeout_seconds: 1200
       location: US
       priority: interactive
       keyfile: ../service_accounts/tmc-changemakers-2025-a5d74b23cad8.json
@@ -20,4 +20,17 @@ csc_dbt:
         environment_config:
           execution_config:
             service_account: csc-dev@tmc-changemakers-2025.iam.gserviceaccount.com
+        runtime_config:
+          properties:
+            spark.executor.instances: "2"
+            spark.driver.cores: "4"
+            spark.driver.memory: "4g"
+            spark.executor.cores: "4"
+            spark.executor.memory: "3g"
+            spark.network.timeout: "300s"
+            spark.rpc.askTimeout: "180s"
+            spark.rpc.lookupTimeout: "60s"
+            spark.sql.execution.arrow.maxRecordsPerBatch: "10000"
+            spark.sql.adaptive.enabled: "true"
+            spark.sql.adaptive.coalescePartitions.enabled: "true"
         
