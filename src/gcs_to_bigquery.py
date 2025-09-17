@@ -156,7 +156,7 @@ def run(
             dataset_name=dataset,
             table_name=table,
             bigquery_client=bigquery_client,
-            autodetect=True if full_refresh else False,
+            autodetect=full_refresh,
         )
 
 
