@@ -25,7 +25,7 @@ def model(dbt, session):
     features = df[MODEL_FEATURES]
 
     for feature in MODEL_FEATURES:
-        print(f"{feature}: {features[feature].isna().sum()} missing values")
+        dbt.logger.info(f"{feature}: {features[feature].isna().sum()} missing values")
 
     target = df["points"].fillna(0)
 
