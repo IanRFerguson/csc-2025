@@ -1,9 +1,12 @@
-from datetime import datetime
-import pandas as pd
-from sqlalchemy import func
-from google.cloud import storage
 import os
 import tempfile
+from datetime import datetime
+
+import pandas as pd
+from google.cloud import storage
+from sqlalchemy import func
+
+from utilities.logger import logger as eng_logger
 
 #####
 
@@ -38,7 +41,7 @@ def get_data_from_nba_reference(year: int, team_initials: str) -> pd.DataFrame:
         scoring_table["_load_timestamp"] = pd.Timestamp(datetime.now())
 
     except Exception as e:
-        print(f"Error occurred: {e}")
+        eng_logger.error(f"Error occurred: {e}")
         return pd.DataFrame()
 
     return scoring_table
@@ -68,12 +71,15 @@ def write_table_to_gcs(
         df.to_csv(temp_file.name, index=False)
         blob.upload_from_filename(temp_file.name, content_type="text/csv")
 
-    print(f"File uploaded to {destination_blob_name} in bucket {bucket_name}.")
+    eng_logger.debug(
+        f"File uploaded to {destination_blob_name} in bucket {bucket_name}."
+    )
 
 
 def run(storage_client: storage.Client) -> None:
     for year in YEARS:
         for team in TEAM_INITIALS:
+            eng_logger.info(f"Fetching data for {team} in {year}...")
             df = get_data_from_nba_reference(year, team)
             if not df.empty:
                 write_table_to_gcs(
@@ -87,11 +93,6 @@ def run(storage_client: storage.Client) -> None:
 #####
 
 if __name__ == "__main__":
-    # Set the JSON file path for the service account key
-    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.path.join(
-        os.path.dirname(__file__), "../service_accounts/use-me.json"
-    )
-
     # Instantiate the Google Cloud Storage client
     storage_client = storage.Client()
 
