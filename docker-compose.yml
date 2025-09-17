@@ -1,0 +1,7 @@
+services:
+  pipeline:
+    build:
+      context: .
+      dockerfile: ./devops/Dockerfile
+    env_file:
+      - .env
