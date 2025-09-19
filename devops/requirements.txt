@@ -1,0 +1,7 @@
+google-cloud-storage
+google-cloud-bigquery
+backoff
+pandas
+sqlalchemy
+dbt-bigquery
+lxml

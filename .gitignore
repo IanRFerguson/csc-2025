@@ -1,5 +1,6 @@
 # Credentials
 service_accounts/
+.env
 
 # Keep the state out of version control
 infra/out

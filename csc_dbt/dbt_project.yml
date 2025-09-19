@@ -3,26 +3,47 @@ version: '1.0.0'
 
 # This setting configures which "profile" dbt uses for this project.
 profile: 'csc_dbt'
-
-# These configurations specify where dbt should look for different types of files.
-# The `model-paths` config, for example, states that models in this project can be
-# found in the "models/" directory. You probably won't need to change these!
 model-paths: ["models"]
 test-paths: ["tests"]
 macro-paths: ["macros"]
 
-# NOTE - This will be removed when `dbt clean`
 clean-targets:         
   - "target"
   - "dbt_packages"
 
 models:
+  elementary:
+    +schema: elementary
+  
   csc_dbt:
+    # This is the default value unless otherwise specified
     +materialized: table
+    
     00-base:
       +schema: base
       +materialized: view
+    
     01-staging:
       +schema: staging
+    
+    # The +enabled config allows us to conditionally run these models
+    # In this case, we don't want to run the ML models unless the
+    # environment variable RUN_ML_MODELS is set to "true"
     02-analytics:
       +schema: analytics
+      +enabled: "{{ env_var('RUN_ML_MODELS', 'false') == 'true'}}"
+    
+    03-reporting:
+      +schema: reporting
+      +materialized: view
+
+vars:
+  elementary:
+    disable_dbt_artifacts_autoupload: true
+    insert_rows_method: "chunk"
+    dbt_artifacts_chunk_size: 1000
+    query_max_size: 1000000
+
+flags:
+  require_explicit_package_overrides_for_builtin_materializations: false
+  source_freshness_run_project_hooks: true

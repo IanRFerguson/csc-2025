@@ -1,3 +1,9 @@
+{{
+    config(
+        tags=["nba", "base"]
+    )
+}}
+
 WITH
     base AS (
         SELECT 

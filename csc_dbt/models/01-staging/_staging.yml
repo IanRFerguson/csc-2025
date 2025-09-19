@@ -1,7 +1,22 @@
 models:
   - name: stg_nba__player_data
+    config:
+      tags: ["nba", "staging"]
     tests:
       - unique:
           column_name: player_id
       - not_null:
           column_name: player_id
+
+  - name: stg_nba__player_data_incremental
+    config:
+      tags: ["nba", "staging", "incremental"]
+    tests:
+      - unique:
+          column_name: player_id
+      - not_null:
+          column_name: player_id
+
+  - name: stg_nba__knicks_players
+    config:
+      tags: ["nba", "staging", "knicks"]
