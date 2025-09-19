@@ -5,6 +5,8 @@ pipeline:
 reset:
 	@echo "Resetting the data pipeline..."
 	@python src/reset_for_demo.py
+	@echo "Making Elementary models to avoid errors later..."
+	@cd csc_dbt && dbt run -s elementary
 
 
 # Runs the individual ELT steps

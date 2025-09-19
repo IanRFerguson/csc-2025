@@ -1,6 +1,13 @@
+import os
+
+STEP_TWO = os.environ.get("DEMO_STEP") == "2"
+
 TEAM_INITIALS = ["MIL", "ATL", "NYK"]
 
-# TEAM_INITIALS += ["LAL", "BOS", "MIA"]
+# When we run the pipeline a second time we'll
+# add in these additional team
+if STEP_TWO:
+    TEAM_INITIALS += ["LAL", "BOS", "MIA"]
 
 YEARS = range(2020, 2026)
 
