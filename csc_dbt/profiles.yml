@@ -33,4 +33,15 @@ csc_dbt:
             spark.sql.execution.arrow.maxRecordsPerBatch: "10000"
             spark.sql.adaptive.enabled: "true"
             spark.sql.adaptive.coalescePartitions.enabled: "true"
-        
+
+elementary:
+  target: edr
+  outputs:
+    edr:
+      type: "bigquery"
+      project: "tmc-changemakers-2025"
+      dataset: "csc_dbt_elementary"
+      method: service-account
+      # NOTE - This needs to be the ABSOLUTE path to the Service Account file
+      keyfile: "{{ env_var('GOOGLE_APPLICATION_CREDENTIALS') }}"
+      threads: 4  

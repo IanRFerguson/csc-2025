@@ -1,0 +1,13 @@
+models:
+  - name: analytics_nba__player_points
+    config:
+      tags: ["nba", "analytics"]
+    tests:
+      - not_null:
+          column_name: player_id
+      - unique:
+          column_name: player_id
+
+  - name: analytics_nba__knicks_points
+    config:
+      tags: ["nba", "analytics", "knicks"]

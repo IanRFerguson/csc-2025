@@ -1,0 +1,7 @@
+models:
+  - name: cln_nba__scoring_leaders_by_year
+    description: "This model captures each team's top scorer by year"
+    config:
+      tags:
+        - reporting
+        - nba

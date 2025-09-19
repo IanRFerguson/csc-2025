@@ -1,6 +1,10 @@
 {{
     config(
         tags=["staging"],
+        cluster_by=[
+            "team_initials", 
+            "season_year"
+        ]
     )
 }}
 

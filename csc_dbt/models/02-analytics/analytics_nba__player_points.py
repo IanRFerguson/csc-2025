@@ -24,9 +24,6 @@ def model(dbt, session):
     # Select features and target variable
     features = df[MODEL_FEATURES]
 
-    for feature in MODEL_FEATURES:
-        dbt.logger.info(f"{feature}: {features[feature].isna().sum()} missing values")
-
     target = df["points"].fillna(0)
 
     # Split the data into training and testing sets
