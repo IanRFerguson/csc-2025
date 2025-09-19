@@ -25,7 +25,7 @@ from utilities.pipeline_helpers import (
 
 @backoff.on_exception(
     backoff.constant,
-    [RuntimeError, NotFound],
+    RuntimeError,
     interval=1,
     max_tries=5,
     logger=eng_logger,
@@ -82,19 +82,15 @@ def load_gcs_to_bigquery(
         table_ref = bigquery_client.dataset(dataset_name).table("log")
         eng_logger.debug(f"Logging {source_blob_name} to {table_ref.path}")
 
-        try:
-            bigquery_client.insert_rows_json(
-                table=table_ref,
-                json_rows=[
-                    {
-                        "blob_name": source_blob_name,
-                        "uploaded_at": datetime.now().isoformat(),
-                    }
-                ],
-            )
-        except NotFound as e:
-            eng_logger.error(f"Error logging to BigQuery: {e}")
-            raise
+        bigquery_client.insert_rows_json(
+            table=table_ref,
+            json_rows=[
+                {
+                    "blob_name": source_blob_name,
+                    "uploaded_at": datetime.now().isoformat(),
+                }
+            ],
+        )
 
     eng_logger.info(
         f"Job finished. Loaded {load_job.output_rows} rows into {dataset_name}.{table_name}"
