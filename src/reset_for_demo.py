@@ -1,12 +1,11 @@
 from google.cloud import bigquery, storage
 
-from utilities.logger import logger as eng_logger
 from constants import (
     BUCKET_NAME,
-    PREFIX,
     DESTINATION_DATASET_NAME,
-    DESTINATION_TABLE_NAME,
+    PREFIX,
 )
+from utilities.logger import logger as eng_logger
 
 #####
 

@@ -4,7 +4,6 @@ from datetime import datetime
 
 import backoff
 from google.cloud import bigquery, storage
-from google.cloud.exceptions import NotFound
 
 from constants import (
     BUCKET_NAME,
