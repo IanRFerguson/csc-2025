@@ -152,7 +152,7 @@ def run(
             dataset_name=dataset,
             table_name=table,
             bigquery_client=bigquery_client,
-            autodetect=full_refresh,
+            autodetect=True,
         )
 
 

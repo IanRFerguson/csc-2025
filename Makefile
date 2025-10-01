@@ -35,4 +35,4 @@ load:
 	@python src/gcs_to_bigquery.py
 
 transform:
-	@cd csc_dbt && dbt build
+	@cd csc_dbt && dbt build --exclude elementary

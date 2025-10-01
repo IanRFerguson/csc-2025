@@ -25,13 +25,14 @@ models:
     
     01-staging:
       +schema: staging
+      +tags: ["staging"]
     
     # The +enabled config allows us to conditionally run these models
     # In this case, we don't want to run the ML models unless the
     # environment variable RUN_ML_MODELS is set to "true"
     02-analytics:
       +schema: analytics
-      +enabled: "{{ env_var('RUN_ML_MODELS', 'false') == 'true'}}"
+      +enabled: "{{ var('RUN_ML_MODELS', 'false') == 'true' }}"
     
     03-reporting:
       +schema: reporting
@@ -39,7 +40,6 @@ models:
 
 vars:
   elementary:
-    disable_dbt_artifacts_autoupload: true
     insert_rows_method: "chunk"
     dbt_artifacts_chunk_size: 1000
     query_max_size: 1000000

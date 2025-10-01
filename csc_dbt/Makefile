@@ -18,4 +18,4 @@ incremental:
 
 # Run our ML models
 ml:
-	@dbt build --exclude elementary --vars "{'RUN_ML_MODELS': true}"
+	@dbt build --exclude elementary --vars "{'RUN_ML_MODELS': 'true', 'disable_dbt_artifacts_autoupload': 'false'}"

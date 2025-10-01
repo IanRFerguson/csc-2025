@@ -1,7 +1,7 @@
 models:
   - name: stg_nba__player_data
     config:
-      tags: ["nba", "staging"]
+      tags: ["nba"]
     tests:
       - unique:
           column_name: player_id
@@ -10,13 +10,15 @@ models:
 
   - name: stg_nba__player_data_incremental
     config:
-      tags: ["nba", "staging", "incremental"]
+      tags: ["nba", "incremental"]
     tests:
       - unique:
-          column_name: player_id
+          column_name: 
+            - player_id
+            # - player_name # NOTE - This will fail
       - not_null:
           column_name: player_id
 
   - name: stg_nba__knicks_players
     config:
-      tags: ["nba", "staging", "knicks"]
+      tags: ["nba", "knicks"]
