@@ -4,6 +4,8 @@ The setup here should be pretty minimal, as long as the cloud infrastructure has
 
 ## Extract + Load
 
+The extract and load steps are defined in the `src/` directory. You can run each component separately if you want to (e.g., `make extract` `make load`), or run the whole pipeline with `make elt`.
+
 | Source File | Description |
 | --- | --- | 
 | `nba_to_gcs` | This code reads raw HTML as a Pandas DataFrame and writes it to GCS |
