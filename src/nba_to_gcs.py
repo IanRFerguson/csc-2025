@@ -1,16 +1,27 @@
-from datetime import datetime
-import pandas as pd
-from sqlalchemy import func
-from google.cloud import storage
-import os
+import json
+import logging
 import tempfile
+from datetime import datetime
+from time import sleep
+
+import backoff
+import pandas as pd
+from google.cloud import storage
+from requests.exceptions import HTTPError
+
+from constants import BASE_URL, BUCKET_NAME, PREFIX, TEAM_INITIALS, YEARS
+from utilities.logger import logger as eng_logger
 
 #####
 
-TEAM_INITIALS = ["MIL", "ATL", "NYK"]
-YEARS = range(2020, 2026)
 
-
+@backoff.on_exception(
+    backoff.expo,
+    (HTTPError),
+    max_tries=3,
+    logger=eng_logger,
+    backoff_log_level=logging.WARNING,
+)
 def get_data_from_nba_reference(year: int, team_initials: str) -> pd.DataFrame:
     """
     Fetch NBA player statistics from Basketball Reference.
@@ -23,14 +34,10 @@ def get_data_from_nba_reference(year: int, team_initials: str) -> pd.DataFrame:
         pd.DataFrame: A DataFrame containing the player statistics.
     """
 
-    url = (
-        "https://www.basketball-reference.com/teams/{team_initials}/{year}.html".format(
-            team_initials=team_initials, year=year
-        )
-    )
+    url = BASE_URL.format(team_initials=team_initials, year=year)
 
     try:
-        scoring_table = pd.read_html(url)[1]
+        scoring_table = pd.read_html(url)[0]
 
         # Add ELT metadata
         scoring_table["year"] = year
@@ -38,7 +45,13 @@ def get_data_from_nba_reference(year: int, team_initials: str) -> pd.DataFrame:
         scoring_table["_load_timestamp"] = pd.Timestamp(datetime.now())
 
     except Exception as e:
-        print(f"Error occurred: {e}")
+        error_msg = str(e).upper()
+        if any(
+            phrase in error_msg for phrase in ["TOO MANY REQUESTS", "429", "RATE LIMIT"]
+        ):
+            raise HTTPError("429: Too Many Requests")
+
+        eng_logger.error(f"Error occurred for {team_initials} {year}: {e}")
         return pd.DataFrame()
 
     return scoring_table
@@ -68,18 +81,25 @@ def write_table_to_gcs(
         df.to_csv(temp_file.name, index=False)
         blob.upload_from_filename(temp_file.name, content_type="text/csv")
 
-    print(f"File uploaded to {destination_blob_name} in bucket {bucket_name}.")
+    eng_logger.debug(
+        f"File uploaded to {destination_blob_name} in bucket {bucket_name}."
+    )
 
 
 def run(storage_client: storage.Client) -> None:
     for year in YEARS:
         for team in TEAM_INITIALS:
+            eng_logger.info(f"Fetching data for {team} in {year}...")
             df = get_data_from_nba_reference(year, team)
             if not df.empty:
+                # NOTE - This artificially slows down the sync to avoid
+                # the web server rate limiting us - increased to 10 seconds
+                sleep(10)
+
                 write_table_to_gcs(
                     df=df,
-                    bucket_name="csc-scratch",
-                    destination_blob_name=f"nba_data/{team}/{year}.csv",
+                    bucket_name=BUCKET_NAME,
+                    destination_blob_name=f"{PREFIX}{team}/{year}.csv",
                     storage_client=storage_client,
                 )
 
@@ -87,11 +107,6 @@ def run(storage_client: storage.Client) -> None:
 #####
 
 if __name__ == "__main__":
-    # Set the JSON file path for the service account key
-    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.path.join(
-        os.path.dirname(__file__), "../service_accounts/use-me.json"
-    )
-
     # Instantiate the Google Cloud Storage client
     storage_client = storage.Client()
 

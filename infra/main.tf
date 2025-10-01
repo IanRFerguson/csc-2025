@@ -11,6 +11,15 @@ provider "google" {
   project = "tmc-changemakers-2025"
 }
 
+resource "google_project_iam_binding" "project" {
+  project = "tmc-changemakers-2025"
+  role    = "roles/editor"
+
+  members = [
+    "user:ian.f@movementcooperative.org",
+  ]
+}
+
 
 // Main dataset in the project
 resource "google_bigquery_dataset" "csc_main" {
@@ -58,10 +67,26 @@ resource "google_project_iam_member" "csc_service_account_roles" {
   for_each = toset([
     "roles/bigquery.dataEditor",
     "roles/bigquery.jobUser",
+    "roles/bigquery.user",
     "roles/storage.admin",
+    "roles/dataproc.editor",
+    "roles/dataproc.worker"
   ])
   project = "tmc-changemakers-2025"
   role    = each.value
   member  = "serviceAccount:${google_service_account.csc_service_account.email}"
 }
 
+resource "google_project_iam_member" "csc_service_account_impersonate" {
+  for_each = toset(["ian.f@movementcooperative.org", "ianfergusonrva@gmail.com"])
+  
+  project = "tmc-changemakers-2025"
+  role    = "roles/iam.serviceAccountUser"
+  member  = "user:${each.value}"
+}
+
+resource "google_project_iam_member" "csc_service_account_impersonate_itself" {
+  project = "tmc-changemakers-2025"
+  role    = "roles/iam.serviceAccountUser"
+  member  = "serviceAccount:${google_service_account.csc_service_account.email}"
+}
