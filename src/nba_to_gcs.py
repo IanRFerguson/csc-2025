@@ -1,5 +1,6 @@
 import json
 import logging
+import random
 import tempfile
 from datetime import datetime
 from time import sleep
@@ -37,7 +38,7 @@ def get_data_from_nba_reference(year: int, team_initials: str) -> pd.DataFrame:
     url = BASE_URL.format(team_initials=team_initials, year=year)
 
     try:
-        scoring_table = pd.read_html(url)[0]
+        scoring_table = pd.read_html(url)[-1]
 
         # Add ELT metadata
         scoring_table["year"] = year
@@ -94,7 +95,9 @@ def run(storage_client: storage.Client) -> None:
             if not df.empty:
                 # NOTE - This artificially slows down the sync to avoid
                 # the web server rate limiting us - increased to 10 seconds
-                sleep(10)
+                buffer = random.randint(1, 10)
+                eng_logger.debug(f"Sleeping for {buffer} seconds to avoid rate limits")
+                sleep(buffer)
 
                 write_table_to_gcs(
                     df=df,
