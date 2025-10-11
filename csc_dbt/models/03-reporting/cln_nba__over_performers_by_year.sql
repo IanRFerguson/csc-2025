@@ -1,3 +1,9 @@
+{{
+    config(
+        enabled=var('RUN_ML_MODELS', 'false') == 'true'
+    )
+}}
+
 WITH
     players AS (
         SELECT
