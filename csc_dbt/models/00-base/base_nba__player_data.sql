@@ -1,6 +1,13 @@
 {{
     config(
-        tags=["nba", "base"]
+        tags=["nba", "base"],
+        enabled=true,
+        materialized='table',
+        partition_by={
+            "field": "_transform_timestamp",
+            "data_type": "timestamp",
+            "granularity": "day"
+        }
     )
 }}
 
