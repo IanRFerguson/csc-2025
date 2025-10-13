@@ -45,6 +45,7 @@ WITH
             year AS season_year,
             team_initials AS team_initials,
             _load_timestamp,
+            {{ datetime_to_date("_load_timestamp") }} AS _load_date,
             _transform_timestamp
 
         FROM {{ ref('base_nba__player_data') }}

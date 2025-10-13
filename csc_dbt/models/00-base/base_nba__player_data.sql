@@ -1,7 +1,7 @@
 {{
     config(
         tags=["nba", "base"],
-        enabled=true,
+        cluster_by=["team_initials"],
         materialized='table',
         partition_by={
             "field": "_transform_timestamp",

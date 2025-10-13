@@ -7,18 +7,23 @@ models:
           column_name: player_id
       - not_null:
           column_name: player_id
+      - knicks_players_only:
+          config:
+            severity: error
 
   - name: stg_nba__player_data_incremental
     config:
       tags: ["nba", "incremental"]
     tests:
       - unique:
-          column_name: 
-            - player_id
-            # - player_name # NOTE - This will fail
+          column_name: player_id
+      - unique:
+          column_name: team_initials
       - not_null:
           column_name: player_id
 
   - name: stg_nba__knicks_players
+    tests:
+      - knicks_players_only
     config:
       tags: ["nba", "knicks"]
