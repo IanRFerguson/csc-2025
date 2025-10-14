@@ -21,6 +21,13 @@ from utilities.pipeline_helpers import (
 
 #####
 
+"""
+NOTE - This source code reads the files that we've written to
+Google Cloud Storage and loads them into Google BigQuery.
+
+This serves as the LOAD step of our pipeline.
+"""
+
 
 @backoff.on_exception(
     backoff.constant,
@@ -49,6 +56,8 @@ def load_gcs_to_bigquery(
         bigquery_client (bigquery.Client): Initialized BigQuery client.
     """
 
+    # NOTE - We're artificially raising a runtime exception on
+    # a random basis to trigger the backoff handlling
     if randomly_fail():
         raise RuntimeError("Simulated transient error")
 

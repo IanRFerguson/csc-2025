@@ -1,4 +1,3 @@
-import json
 import logging
 import random
 import tempfile
@@ -15,7 +14,16 @@ from utilities.logger import logger as eng_logger
 
 #####
 
+"""
+NOTE - This source code scrapes data from Basketball Reference and writes
+it to Google Cloud Storage. We've installed backoff handling to try
+and offset rate limiting errors raised by the source server.
 
+This serves as the EXTRACT step of our pipeline.
+"""
+
+
+# Test
 @backoff.on_exception(
     backoff.expo,
     (HTTPError),
@@ -35,6 +43,7 @@ def get_data_from_nba_reference(year: int, team_initials: str) -> pd.DataFrame:
         pd.DataFrame: A DataFrame containing the player statistics.
     """
 
+    # Format the URL that we're going to request from the server
     url = BASE_URL.format(team_initials=team_initials, year=year)
 
     try:
@@ -45,6 +54,8 @@ def get_data_from_nba_reference(year: int, team_initials: str) -> pd.DataFrame:
         scoring_table["team_initials"] = team_initials
         scoring_table["_load_timestamp"] = pd.Timestamp(datetime.now())
 
+    # NOTE - in this block, if we receive a rate limiting error we're going to
+    # backoff and try again ... otherwise we'll return an empty DataFrame
     except Exception as e:
         error_msg = str(e).upper()
         if any(
@@ -77,7 +88,9 @@ def write_table_to_gcs(
     bucket = storage_client.bucket(bucket_name)
     blob = bucket.blob(destination_blob_name)
 
-    # Convert DataFrame to CSV and upload to GCS
+    # NOTE - This step unloads the dataframe to the physical volume we're
+    # running on (e.g., DataFrame -> local CSV), then writes that CSV
+    # to Google Cloud Storage
     with tempfile.NamedTemporaryFile() as temp_file:
         df.to_csv(temp_file.name, index=False)
         blob.upload_from_filename(temp_file.name, content_type="text/csv")
@@ -110,6 +123,10 @@ def run(storage_client: storage.Client) -> None:
 #####
 
 if __name__ == "__main__":
+    # NOTE - whenever we have clients that need authentication, it's
+    # best practice to instantiate client before running the script. This
+    # is a fundamental concept of engineering called Dependency Injection
+
     # Instantiate the Google Cloud Storage client
     storage_client = storage.Client()
 
