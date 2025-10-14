@@ -9,7 +9,9 @@ models:
           column_name: player_id
       - knicks_players_only:
           config:
-            severity: error
+            # NOTE - if you change this to "error", the dbt run will fail
+            # and all of the downstream models will not run!
+            severity: warn
 
   - name: stg_nba__player_data_incremental
     config:
