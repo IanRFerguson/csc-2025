@@ -3,20 +3,21 @@ version: '1.0.0'
 
 # This setting configures which "profile" dbt uses for this project.
 profile: 'csc_dbt'
+
+# These paths correspond to the directories where you store
+# your dbt models, tests, macros, etc.
 model-paths: ["models"]
 test-paths: ["tests"]
 macro-paths: ["macros"]
-
-clean-targets:         
-  - "target"
-  - "dbt_packages"
 
 models:
   elementary:
     +schema: elementary
   
   csc_dbt:
-    # This is the default value unless otherwise specified
+    # This is the global default value unless otherwise specified
+    # In other words, we'll always materialize tables from our
+    # dbt models unless if we're overriding it
     +materialized: table
     
     00-base:
