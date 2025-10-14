@@ -13,6 +13,7 @@ YEARS = range(2020, 2026)
 
 BUCKET_NAME = "csc-scratch"
 PREFIX = "nba_data/"
+BACKUP_PREFIX = "nba_data_backup/"
 DESTINATION_DATASET_NAME = "csc_main"
 DESTINATION_TABLE_NAME = "nba_player_data"
 

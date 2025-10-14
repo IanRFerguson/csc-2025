@@ -4,11 +4,14 @@ pipeline:
 
 reset:
 	@echo "Resetting the data pipeline..."
-	@python src/reset_for_demo.py
+	@python src/demo_setup/reset_for_demo.py
 	@echo "Making Elementary models to avoid errors later..."
 	@cd csc_dbt && dbt run -s elementary --vars "{'RUN_ML_MODELS': 'true', 'disable_dbt_artifacts_autoupload': 'false'}"
 	@rm -rf csc_dbt/target
 
+backup:
+	@echo "Backing up the data pipeline..."
+	@python src/demo_setup/backup_for_demo.py
 
 # Runs the individual ELT steps
 # NOTE - This is the Docker command executed in `make pipeline`
