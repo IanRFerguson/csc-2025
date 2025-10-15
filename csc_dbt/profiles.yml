@@ -12,6 +12,7 @@ csc_dbt:
       priority: interactive
       keyfile: ../service_accounts/tmc-changemakers-2025-a5d74b23cad8.json
 
+      # NOTE - Everything below this line is ONLY required for dbt-python models
       # See the docs here - https://docs.getdbt.com/docs/core/connect-data-platform/bigquery-setup#running-python-models-on-dataproc
       gcs_bucket: csc-scratch
       dataproc_region: us-central1
