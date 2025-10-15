@@ -1,3 +1,8 @@
+import sys
+import os
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
+
 from google.cloud import storage
 from constants import BACKUP_PREFIX, BUCKET_NAME, PREFIX
 from utilities.logger import logger as eng_logger

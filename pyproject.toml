@@ -1,0 +1,20 @@
+[tool.ruff]
+line-length = 88
+indent-width = 4
+target-version = "py312"
+
+[tool.ruff.lint]
+# The way the Flask app is setup currently means
+# that there are a ton of unused imports, we want
+# to ignore these holistically for now
+extend-ignore = ["F401", "E203", "E266", "E402", "E501", "E711", "E712", "F403", "F821"]
+select = ["E", "F", "I"]
+
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+docstring-code-format = false
+docstring-code-line-length = "dynamic"

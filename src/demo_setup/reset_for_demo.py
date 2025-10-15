@@ -1,7 +1,12 @@
+import sys
+import os
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
+
 from google.cloud import bigquery, storage
 
-from constants import BUCKET_NAME, DESTINATION_DATASET_NAME, PREFIX
-from utilities.logger import logger as eng_logger
+from src.constants import BUCKET_NAME, DESTINATION_DATASET_NAME, PREFIX
+from src.utilities.logger import logger as eng_logger
 
 #####
 
